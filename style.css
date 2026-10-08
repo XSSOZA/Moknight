@@ -109,7 +109,8 @@ section{padding:70px 0}
 .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:34px}
 .filters{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:8px 16px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-weight:600;transition:.25s}
-.chip.active,.chip:hover{color:#fff;border-color:transparent;background:linear-gradient(90deg,var(--blue),var(--purple))}
+.chip.active{color:#fff;border-color:transparent;background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 8px 22px -8px color-mix(in srgb,var(--blue) 65%,transparent)}
+@media (hover:hover){.chip:not(.active):hover{color:var(--text);border-color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,transparent)}}
 .search{margin-inline-start:auto;position:relative}
 .search input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:100px;font-family:inherit;font-size:13px;width:190px;outline:none;transition:.25s}
 .search input:focus{border-color:var(--blue);width:220px}
@@ -226,8 +227,8 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
 .portfolio-page.show{display:block}
 .portfolio-page.enter{opacity:1;transform:scale(1);filter:blur(0)}
 .pfnav{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;
-  position:sticky;top:0;z-index:5;background:color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+  position:sticky;top:0;z-index:5;background:color-mix(in srgb, var(--bg) 60%, transparent);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
 .backbtn{display:flex;align-items:center;gap:8px;color:var(--text2);font-weight:600;font-size:14px;
   background:none;border:none}
 .backbtn:hover{color:var(--text)}
@@ -242,16 +243,17 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
 /* light cone from the top */
 .ambient::before{content:"";position:absolute;inset:0;
   background:
-    radial-gradient(ellipse 55% 42% at 50% -8%, color-mix(in srgb,var(--glow) 42%,transparent), transparent 72%),
-    radial-gradient(ellipse 30% 30% at 88% 8%, color-mix(in srgb,var(--purple) 26%,transparent), transparent 70%);
+    radial-gradient(ellipse 75% 55% at 50% -12%,
+      color-mix(in srgb,var(--glow) 34%,transparent) 0%,
+      color-mix(in srgb,var(--glow) 20%,transparent) 28%,
+      color-mix(in srgb,var(--glow) 9%,transparent) 55%,
+      color-mix(in srgb,var(--glow) 3%,transparent) 78%,
+      transparent 100%),
+    radial-gradient(ellipse 40% 36% at 92% 6%,
+      color-mix(in srgb,var(--purple) 24%,transparent) 0%,
+      color-mix(in srgb,var(--purple) 9%,transparent) 50%,
+      transparent 100%);
   animation:glowPulse 9s ease-in-out infinite}
-/* faint grid that fades away from the light */
-.ambient::after{content:"";position:absolute;inset:0;
-  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
-  background-size:56px 56px;
-  -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 0%,transparent 75%);
-  mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 0%,transparent 75%);
-  opacity:.7}
 @keyframes glowPulse{0%,100%{opacity:.85}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.ambient::before{animation:none}}
 
@@ -262,8 +264,16 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
 
 /* same lighting inside the portfolio page */
 .portfolio-page{background:
-  radial-gradient(ellipse 60% 40% at 50% -6%, color-mix(in srgb,var(--glow) 32%,transparent), transparent 72%),
-  radial-gradient(ellipse 45% 40% at 0% 100%, color-mix(in srgb,var(--purple) 16%,transparent), transparent 70%),
+  radial-gradient(ellipse 75% 50% at 50% -10%,
+    color-mix(in srgb,var(--glow) 30%,transparent) 0%,
+    color-mix(in srgb,var(--glow) 17%,transparent) 30%,
+    color-mix(in srgb,var(--glow) 7%,transparent) 58%,
+    color-mix(in srgb,var(--glow) 2%,transparent) 80%,
+    transparent 100%),
+  radial-gradient(ellipse 55% 45% at 0% 100%,
+    color-mix(in srgb,var(--purple) 15%,transparent) 0%,
+    color-mix(in srgb,var(--purple) 5%,transparent) 55%,
+    transparent 100%),
   var(--bg)}
 
 /* light theme: white + blue polish */
@@ -275,7 +285,9 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
 :root[data-theme="light"] .ccard:hover{border-color:var(--blue);box-shadow:0 18px 44px rgba(31,98,255,.18)}
 :root[data-theme="light"] .btn.ghost{background:#fff;border-color:var(--border2);color:var(--blue)}
 :root[data-theme="light"] .btn.ghost:hover{background:color-mix(in srgb,var(--blue) 8%,#fff)}
-:root[data-theme="light"] .chip{background:#fff}
+:root[data-theme="light"] .chip{background:#fff;color:var(--text2)}
+@media (hover:hover){:root[data-theme="light"] .chip:not(.active):hover{background:color-mix(in srgb,var(--blue) 9%,#fff);color:var(--blue);border-color:var(--blue)}}
+:root[data-theme="light"] .chip.active{color:#fff;background:linear-gradient(90deg,var(--blue),var(--purple))}
 :root[data-theme="light"] .search input{background:#fff}
 :root[data-theme="light"] .pfnav{background:color-mix(in srgb,#fff 75%,transparent)}
 :root[data-theme="light"] .logo{background:linear-gradient(90deg,var(--text),var(--blue) 110%);-webkit-background-clip:text;background-clip:text}
@@ -299,3 +311,17 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
   .eyebrow,.hero h1,.hero p.tagline,.hero .ctas{animation:none;opacity:1}
   .vmodal,.overlay{transition:none}
 }
+
+/* dark theme: a touch more light on the portfolio page */
+:root[data-theme="dark"] .portfolio-page{background:
+  radial-gradient(ellipse 75% 50% at 50% -10%,
+    color-mix(in srgb,var(--glow) 44%,transparent) 0%,
+    color-mix(in srgb,var(--glow) 25%,transparent) 30%,
+    color-mix(in srgb,var(--glow) 10%,transparent) 58%,
+    color-mix(in srgb,var(--glow) 3%,transparent) 80%,
+    transparent 100%),
+  radial-gradient(ellipse 55% 45% at 0% 100%,
+    color-mix(in srgb,var(--purple) 22%,transparent) 0%,
+    color-mix(in srgb,var(--purple) 7%,transparent) 55%,
+    transparent 100%),
+  var(--bg)}
