@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MoKnight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="ambient"><div class="blob blob1"></div><div class="blob blob2"></div><div class="blob blob3"></div></div>
+
+<header>
+  <nav class="nav" id="nav">
+    <div class="logo">MoKnight</div>
+    <div class="navlinks">
+      <a href="#home" data-i18n="nav_home">الرئيسية</a>
+      <a href="#" class="js-portfolio-link" data-i18n="nav_portfolio">أعمالي</a>
+      <a href="#about" data-i18n="nav_about">عني</a>
+      <a href="#contact" data-i18n="nav_contact">تواصل</a>
+    </div>
+    <div class="navctrls">
+      <button class="pillbtn" id="langBtn">EN</button>
+      <button class="iconbtn" id="themeBtn" aria-label="theme"></button>
+      <button class="iconbtn burger" id="burgerBtn" aria-label="menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="mobilemenu" id="mobileMenu">
+  <button class="iconbtn close" id="mobileClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <a href="#home" data-i18n="nav_home">الرئيسية</a>
+  <a href="#" class="js-portfolio-link" data-i18n="nav_portfolio">أعمالي</a>
+  <a href="#about" data-i18n="nav_about">عني</a>
+  <a href="#contact" data-i18n="nav_contact">تواصل</a>
+  <div class="navctrls">
+    <button class="pillbtn" id="langBtnM">EN</button>
+    <button class="iconbtn" id="themeBtnM"></button>
+  </div>
+</div>
+
+<main class="wrap" id="mainPage">
+  <section class="hero" id="home">
+    <span class="eyebrow" data-i18n="hero_eyebrow">MOKNIGHT STUDIO</span>
+    <h1 data-i18n="hero_title">صانع <span>الحكايات المرئية</span></h1>
+    <p class="tagline" data-i18n="hero_tagline">مونتير وصانع موشن جرافيك، أحوّل الأفكار إلى فيديوهات سينمائية تُروى بصريًا.</p>
+    <div class="ctas">
+      <a href="#" class="btn primary js-portfolio-link" data-i18n="hero_cta1">مشاهدة أعمالي</a>
+      <a href="#contact" class="btn ghost" data-i18n="hero_cta2">تواصل معي</a>
+    </div>
+  </section>
+
+  <section id="latest">
+    <div class="secbar">
+      <div>
+        <h2 class="sectitle" data-i18n="latest_title">آخر أعمالي</h2>
+        <p class="secsub" data-i18n="latest_sub">أحدث ما اشتغلت عليه</p>
+      </div>
+      <a href="#" class="btn ghost js-portfolio-link" data-i18n="latest_seeall">مشاهدة كل الأعمال</a>
+    </div>
+    <div id="latestGrid" class="grid"></div>
+    <div id="latestEmpty" class="empty hide">
+      <h3 data-i18n="empty_title">لم أضف أعمالي بعد</h3>
+      <p data-i18n="empty_sub">سيتم عرض مشاريعي هنا قريبًا.</p>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="about">
+      <div>
+        <h2 class="sectitle" data-i18n="about_title">عني</h2>
+        <p data-i18n="about_p1">أعمل في مجال المونتاج والموشن جرافيك، وأهتم بتحويل الأفكار البسيطة إلى محتوى مرئي احترافي يجذب المشاهد من اللحظة الأولى.</p>
+        <p data-i18n="about_p2">أشتغل على فيديوهات قصيرة وطويلة، بهوية بصرية سينمائية ودقة في التفاصيل.</p>
+        <div class="tools">
+          <span class="toolchip">After Effects</span>
+          <span class="toolchip">Premiere Pro</span>
+          <span class="toolchip">Photoshop</span>
+          <span class="toolchip">Illustrator</span>
+        </div>
+      </div>
+      <div style="aspect-ratio:4/3;border-radius:20px;border:1px solid var(--border);background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 18%,transparent),color-mix(in srgb,var(--purple) 22%,transparent));display:flex;align-items:center;justify-content:center">
+        <div class="logo" style="font-size:38px">MoKnight</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2 class="sectitle" data-i18n="contact_title">تواصل معي</h2>
+    <p class="secsub" data-i18n="contact_sub">للتعاون أو الاستفسارات، تقدر توصلني من هنا</p>
+    <div class="contactgrid" id="contactGrid"></div>
+  </section>
+</main>
+
+<div class="portfolio-page" id="portfolioPage">
+  <div class="pfnav">
+    <button class="backbtn" id="pfBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg><span data-i18n="nav_home">الرئيسية</span></button>
+    <div class="logo">MoKnight</div>
+    <div class="navctrls">
+      <button class="pillbtn" id="langBtnPf"></button>
+      <button class="iconbtn" id="themeBtnPf"></button>
+    </div>
+  </div>
+  <div class="wrap" style="padding-top:40px;padding-bottom:70px">
+    <div class="secbar">
+      <div>
+        <h2 class="sectitle" data-i18n="pf_title">أعمالي</h2>
+        <p class="secsub" data-i18n="pf_sub">مجموعة مختارة من مشاريع المونتاج والموشن جرافيك</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="filters" id="filters"></div>
+      <div class="search"><input id="searchInput" type="text" data-i18n-ph="pf_search" placeholder="ابحث عن مشروع..."></div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="emptyState" class="empty hide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l4-4a2 2 0 0 1 2.8 0L14 15m3-3l1.5-1.5a2 2 0 0 1 2.8 0L21 12"/><circle cx="8" cy="9" r="1.5"/></svg>
+      <h3 data-i18n="empty_title">لم أضف أعمالي بعد</h3>
+      <p data-i18n="empty_sub">سيتم عرض مشاريعي هنا قريبًا.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div>&copy; 2026 MoKnight — <span data-i18n="footer_rights">جميع الحقوق محفوظة</span></div>
+</footer>
+
+<div class="overlay" id="videoOverlay">
+  <div class="modal wide" style="max-width:780px;padding:0;background:#000">
+    <button class="mclose" id="videoClose">&times;</button>
+    <div class="videobox"><video id="lightboxVideo" controls playsinline></video></div>
+    <div class="detailmeta" id="detailMeta"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="transitionLayer" id="transitionLayer"></div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
