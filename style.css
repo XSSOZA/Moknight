@@ -368,3 +368,6 @@ footer{padding:40px 0 calc(60px + env(safe-area-inset-bottom,0px));text-align:ce
 
 /* منع أي عنصر من توسيع عرض الصفحة على الموبايل */
 html,body{overflow-x:clip;max-width:100%}
+/* إخفاء شريط التمرير (التمرير شغال عادي) */
+html,body,*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
