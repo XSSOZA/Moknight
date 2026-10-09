@@ -1,5 +1,6 @@
 /* ============================================================
    MoKnight — لوحة الأدمن (رفع / تعديل / إخفاء / حذف الأعمال)
+   v2: عربي + إنجليزي، قوايم بتتمدد من النص، اختيار البرامج، حركات
    ------------------------------------------------------------
    - بتستخدم نفس Supabase ونفس تسجيل الدخول بتاع التعليقات.
    - الزوار بيشوفوا الأعمال المنشورة بس، والأدمن بس بيشوف الأزرار.
@@ -19,21 +20,68 @@ const P = API.projects;
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const CATS = [['editing','مونتاج'],['motion','موشن جرافيك'],['thumb','صور مصغّرة'],['short','فيديو قصير'],['long','فيديو طويل'],['other','أخرى']];
-const ARS = [['16:9','أفقي 16:9'],['9:16','عمودي 9:16'],['1:1','مربع 1:1']];
+/* ---------- القوايم (القيمة، عربي، إنجليزي) ---------- */
+const CATS = [['editing','مونتاج','Video Editing'],['motion','موشن جرافيك','Motion Graphics'],['thumb','صور مصغّرة','Thumbnails'],['short','فيديو قصير','Short Video'],['long','فيديو طويل','Long Video'],['other','أخرى','Other']];
+const ARS  = [['16:9','أفقي 16:9','Horizontal 16:9'],['9:16','عمودي 9:16','Vertical 9:16'],['1:1','مربع 1:1','Square 1:1']];
+const STAT = [['published','ظاهر للزوار','Visible to visitors'],['draft','مخفي (مسودة)','Hidden (draft)']];
+const LISTS = { cat:CATS, ar:ARS, status:STAT };
+/* البرامج اللي تختار منها — تقدر تزوّد عليها هنا */
+const SOFT = ['Premiere Pro','After Effects','Photoshop','Illustrator'];
+
+/* ---------- النصوص ---------- */
+const TX = {
+  ar:{
+    add:'إضافة عمل', addT:'إضافة عمل جديد', editT:'تعديل العمل',
+    pickVid:'اختر ملف الفيديو من جهازك', thumb:'صورة مصغّرة', pickThumb:'اختار صورة مصغّرة بنفسي', thumbHint:'لو ما اخترتش، هتتاخد تلقائي من الفيديو',
+    nameAr:'الاسم بالعربي', nameEn:'الاسم بالإنجليزي (Project name)', desc:'وصف قصير',
+    lCat:'التصنيف', lAr:'شكل الفيديو', lDur:'المدة', lStatus:'الحالة', lSoft:'البرامج المستخدمة (تقدر تختار أكتر من واحد)',
+    cancel:'إلغاء', upload:'رفع ونشر', saveEdit:'حفظ التعديلات',
+    uploading:'جاري رفع الفيديو...', saving:'بحفظ البيانات...', savingShort:'بحفظ...',
+    reading:'بقرأ بيانات الفيديو...', readOk:'تم — راجع البيانات واضغط رفع', readFail:'المتصفح مقدرش يقرأ الفيديو، اكتب المدة والنسبة بإيدك',
+    notVideo:'الملف لازم يكون فيديو', pickFirst:'اختار ملف الفيديو الأول', needName:'اكتب اسم للعمل (عربي أو إنجليزي)',
+    errSave:'معرفتش أحفظ البيانات — اتأكد إنك شغّلت ملف admin-setup.sql', errEdit:'معرفتش أحفظ التعديل (تأكد إنك مسجّل دخول)',
+    errImg:'الصورة مش مقروءة', relogin:'سجّل دخول الأدمن تاني', tooBig:'حجم الملف أكبر من المسموح في Supabase (الباقة المجانية 50MB)',
+    noPerm:'مفيش صلاحية — اتأكد من الإيميل في ملف SQL وإنك مسجّل دخول', conn:'مشكلة في الاتصال أثناء الرفع', failUp:'فشل الرفع', errGen:'حصلت مشكلة، حاول تاني',
+    done:'تم رفع العمل ✓', doneEdit:'تم حفظ التعديلات ✓', shown:'العمل ظاهر دلوقتي للزوار', hidden:'العمل اتخفى عن الزوار',
+    errVis:'معرفتش أغيّر الحالة (تأكد إنك مسجّل دخول)', deleted:'تم حذف العمل', errDel:'معرفتش أحذف (تأكد إنك مسجّل دخول)',
+    edit:'تعديل', hide:'إخفاء', show:'إظهار', del:'حذف', sure:'تأكيد الحذف؟', badge:'مخفي'
+  },
+  en:{
+    add:'Add work', addT:'Add a new work', editT:'Edit work',
+    pickVid:'Choose a video file from your device', thumb:'Thumbnail', pickThumb:'Choose my own thumbnail', thumbHint:'If you skip it, a frame from the video is used',
+    nameAr:'Title in Arabic', nameEn:'Title in English', desc:'Short description',
+    lCat:'Category', lAr:'Video shape', lDur:'Duration', lStatus:'Status', lSoft:'Tools used (pick as many as you like)',
+    cancel:'Cancel', upload:'Upload & publish', saveEdit:'Save changes',
+    uploading:'Uploading video...', saving:'Saving details...', savingShort:'Saving...',
+    reading:'Reading video info...', readOk:'Done — review the details and hit upload', readFail:"Couldn't read the video, enter duration and shape manually",
+    notVideo:'The file must be a video', pickFirst:'Choose a video file first', needName:'Enter a title (Arabic or English)',
+    errSave:"Couldn't save the details — make sure you ran admin-setup.sql", errEdit:"Couldn't save the changes (make sure you're signed in)",
+    errImg:"Couldn't read that image", relogin:'Please sign in as admin again', tooBig:'File is larger than Supabase allows (free plan: 50MB)',
+    noPerm:'No permission — check the email in the SQL file and that you are signed in', conn:'Connection problem while uploading', failUp:'Upload failed', errGen:'Something went wrong, try again',
+    done:'Work uploaded ✓', doneEdit:'Changes saved ✓', shown:'The work is now visible to visitors', hidden:'The work is now hidden from visitors',
+    errVis:"Couldn't change visibility (make sure you're signed in)", deleted:'Work deleted', errDel:"Couldn't delete (make sure you're signed in)",
+    edit:'Edit', hide:'Hide', show:'Show', del:'Delete', sure:'Confirm delete?', badge:'Hidden'
+  }
+};
+const L = () => document.documentElement.lang === 'en' ? 'en' : 'ar';
+const t = k => TX[L()][k];
+const lab = o => L()==='en' ? o[2] : o[1];
 
 const IC = {
   plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>',
   edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
   eye:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   eyeoff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9M9.9 5.1A10.7 10.7 0 0 1 12 5c7 0 11 7 11 7a18.5 18.5 0 0 1-2.2 3.2M1 1l22 22"/></svg>',
-  trash:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg>'
+  trash:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg>',
+  chev:'<svg class="mk-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg>',
+  check:'<svg class="mk-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>',
+  upl:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>'
 };
 
 /* ---------- الجلسة (نفس تسجيل دخول التعليقات) ---------- */
 const getSession = () => { try{ return JSON.parse(localStorage.getItem(LS_ADMIN)||'null'); }catch(e){ return null; } };
 const setSession = s => { try{ s ? localStorage.setItem(LS_ADMIN, JSON.stringify(s)) : localStorage.removeItem(LS_ADMIN); }catch(e){} };
-function jwtExp(t){ try{ return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp; }catch(e){ return 0; } }
+function jwtExp(tk){ try{ return JSON.parse(atob(tk.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp; }catch(e){ return 0; } }
 async function token(force){
   let s = getSession(); if(!s) return null;
   if(force || jwtExp(s.access) - Date.now()/1000 < 60){
@@ -60,8 +108,8 @@ async function rest(path, opts){
 const pubUrl = path => BASE+'/storage/v1/object/public/'+BUCKET+'/'+path;
 function upload(path, blob, onProg){
   return new Promise(async (res, rej)=>{
-    let tk; try{ tk = await token(false); }catch(e){ return rej(new Error('سجّل دخول الأدمن تاني')); }
-    if(!tk) return rej(new Error('سجّل دخول الأدمن تاني'));
+    let tk; try{ tk = await token(false); }catch(e){ return rej(new Error(t('relogin'))); }
+    if(!tk) return rej(new Error(t('relogin')));
     const x = new XMLHttpRequest();
     x.open('POST', BASE+'/storage/v1/object/'+BUCKET+'/'+path);
     x.setRequestHeader('apikey', KEY); x.setRequestHeader('Authorization', 'Bearer '+tk);
@@ -71,11 +119,11 @@ function upload(path, blob, onProg){
     x.onload = () => {
       if(x.status>=200 && x.status<300) return res(path);
       let m = ''; try{ m = JSON.parse(x.responseText).message || ''; }catch(e){}
-      if(x.status===413 || /exceeded|too large/i.test(m)) m = 'حجم الملف أكبر من المسموح في Supabase (الباقة المجانية 50MB)';
-      else if(x.status===401 || x.status===403) m = 'مفيش صلاحية — اتأكد من الإيميل في ملف SQL وإنك مسجّل دخول';
-      rej(new Error(m || ('فشل الرفع ('+x.status+')')));
+      if(x.status===413 || /exceeded|too large/i.test(m)) m = t('tooBig');
+      else if(x.status===401 || x.status===403) m = t('noPerm');
+      rej(new Error(m || (t('failUp')+' ('+x.status+')')));
     };
-    x.onerror = () => rej(new Error('مشكلة في الاتصال أثناء الرفع'));
+    x.onerror = () => rej(new Error(t('conn')));
     x.send(blob);
   });
 }
@@ -121,10 +169,10 @@ function decorate(){
     card.classList.toggle('mk-draft', p.status !== 'published');
     const bar = document.createElement('div'); bar.className = 'mk-bar';
     bar.innerHTML =
-      (p.status !== 'published' ? '<span class="mk-badge">مخفي</span>' : '') +
-      '<button type="button" data-a="edit" title="تعديل">'+IC.edit+'</button>'+
-      '<button type="button" data-a="vis" title="'+(p.status==='published'?'إخفاء':'إظهار')+'">'+(p.status==='published'?IC.eyeoff:IC.eye)+'</button>'+
-      '<button type="button" data-a="del" class="mk-del" title="حذف">'+IC.trash+'</button>';
+      (p.status !== 'published' ? '<span class="mk-badge">'+t('badge')+'</span>' : '') +
+      '<button type="button" data-a="edit" title="'+t('edit')+'">'+IC.edit+'</button>'+
+      '<button type="button" data-a="vis" title="'+(p.status==='published'?t('hide'):t('show'))+'">'+(p.status==='published'?IC.eyeoff:IC.eye)+'</button>'+
+      '<button type="button" data-a="del" class="mk-del" title="'+t('del')+'">'+IC.trash+'</button>';
     ['click','keydown','pointerdown'].forEach(ev => bar.addEventListener(ev, e => e.stopPropagation()));
     bar.addEventListener('click', e => {
       const b = e.target.closest('button'); if(!b) return;
@@ -142,12 +190,12 @@ async function toggleVis(p){
     const r = await rest('projects?id=eq.'+encodeURIComponent(p.dbId), { method:'PATCH', headers:{Prefer:'return=representation'}, body:JSON.stringify({ status:next }) });
     if(!r.ok || !(await r.json()).length) throw 0;
     p.status = next; API.rerender(); decorate();
-    toast(next==='published' ? 'العمل ظاهر دلوقتي للزوار' : 'العمل اتخفى عن الزوار');
-  }catch(e){ toast('معرفتش أغيّر الحالة (تأكد إنك مسجّل دخول)', true); }
+    toast(next==='published' ? t('shown') : t('hidden'));
+  }catch(e){ toast(t('errVis'), true); }
 }
 async function delProject(p, btn){
   if(!btn.classList.contains('armed')){
-    btn.classList.add('armed'); btn.insertAdjacentHTML('beforeend','<span> تأكيد الحذف؟</span>');
+    btn.classList.add('armed'); btn.insertAdjacentHTML('beforeend','<span>'+t('sure')+'</span>');
     setTimeout(()=>{ if(btn.isConnected){ btn.classList.remove('armed'); const s = btn.querySelector('span'); if(s) s.remove(); } }, 3000);
     return;
   }
@@ -157,13 +205,17 @@ async function delProject(p, btn){
     if(!r.ok || !(await r.json()).length) throw 0;
     await removeFiles([p.video_path, p.thumb_path]);
     const i = P.indexOf(p); if(i>-1) P.splice(i,1);
-    API.rerender(); decorate(); toast('تم حذف العمل');
-  }catch(e){ btn.disabled = false; toast('معرفتش أحذف (تأكد إنك مسجّل دخول)', true); }
+    API.rerender(); decorate(); toast(t('deleted'));
+  }catch(e){ btn.disabled = false; toast(t('errDel'), true); }
 }
 
 /* ---------- نافذة الإضافة / التعديل ---------- */
 let mode = 'add', editing = null, vidFile = null, thumbBlob = null, thumbChanged = false, busy = false;
-const opts = list => list.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+const val = { cat:'short', ar:'16:9', status:'published' };
+let softSel = [], softExtra = [];
+
+const ddHTML = n => '<div class="mk-dd" id="mkdd-'+n+'" data-n="'+n+'"><button type="button" class="mk-dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="mk-dd-val"></span>'+IC.chev+'</button><div class="mk-dd-list" role="listbox"></div></div>';
+const fieldHTML = (lbl, inner) => '<div class="mk-field"><span class="mk-lbl" data-l="'+lbl+'"></span>'+inner+'</div>';
 
 function buildModal(){
   if($('mkOv')) return;
@@ -173,53 +225,130 @@ function buildModal(){
    '<div class="cm-modal mk-modal">'+
      '<button type="button" class="cm-x" id="mkClose" aria-label="close">&times;</button>'+
      '<h3 class="cm-mtitle" id="mkTitle"></h3>'+
-     '<div id="mkVidWrap"><label class="mk-file"><input type="file" id="mkVid" accept="video/*" hidden><span id="mkVidName">اختر ملف الفيديو من جهازك</span></label></div>'+
-     '<div class="mk-thumbrow"><div class="mk-thumb" id="mkThumb"><span>صورة مصغّرة</span></div>'+
-       '<div class="mk-thumbside"><button type="button" class="mk-link" id="mkPick">اختار صورة مصغّرة بنفسي</button><input type="file" id="mkImg" accept="image/*" hidden>'+
-       '<small>لو ما اخترتش، هتتاخد تلقائي من الفيديو</small></div></div>'+
-     '<input id="mkTa" class="cm-input" type="text" placeholder="الاسم بالعربي" maxlength="80">'+
-     '<input id="mkTe" class="cm-input" type="text" placeholder="الاسم بالإنجليزي (Project name)" maxlength="80" dir="ltr">'+
-     '<textarea id="mkDesc" class="cm-input" rows="3" placeholder="وصف قصير" maxlength="300" style="min-height:70px"></textarea>'+
-     '<div class="mk-two"><select id="mkCat" class="cm-input mk-sel">'+opts(CATS)+'</select><select id="mkAr" class="cm-input mk-sel">'+opts(ARS)+'</select></div>'+
-     '<div class="mk-two"><input id="mkDur" class="cm-input" type="text" placeholder="المدة 00:30" maxlength="10" dir="ltr"><select id="mkStatus" class="cm-input mk-sel"><option value="published">ظاهر للزوار</option><option value="draft">مخفي (مسودة)</option></select></div>'+
-     '<input id="mkSoft" class="cm-input" type="text" placeholder="البرامج: Premiere Pro, After Effects" maxlength="120" dir="ltr">'+
-     '<div class="mk-bar-wrap" id="mkProgWrap" hidden><div class="mk-prog"><i id="mkProg"></i></div></div>'+
+     '<div id="mkVidWrap"><label class="mk-file" id="mkFile"><input type="file" id="mkVid" accept="video/*" hidden>'+IC.upl+'<span id="mkVidName"></span></label></div>'+
+     '<div class="mk-thumbrow"><div class="mk-thumb" id="mkThumb"></div>'+
+       '<div class="mk-thumbside"><button type="button" class="mk-link" id="mkPick"></button><input type="file" id="mkImg" accept="image/*" hidden><small id="mkHint"></small></div></div>'+
+     '<input id="mkTa" class="cm-input" type="text" maxlength="80">'+
+     '<input id="mkTe" class="cm-input" type="text" maxlength="80" dir="ltr">'+
+     '<textarea id="mkDesc" class="cm-input" rows="3" maxlength="300" style="min-height:70px"></textarea>'+
+     '<div class="mk-two">'+fieldHTML('lCat', ddHTML('cat'))+fieldHTML('lAr', ddHTML('ar'))+'</div>'+
+     '<div class="mk-two">'+fieldHTML('lDur','<input id="mkDur" class="cm-input" type="text" placeholder="00:30" maxlength="10" dir="ltr">')+fieldHTML('lStatus', ddHTML('status'))+'</div>'+
+     '<div class="mk-field"><span class="mk-lbl" data-l="lSoft"></span><div class="mk-chips" id="mkChips"></div></div>'+
+     '<div class="mk-prog-wrap" id="mkProgWrap" hidden><div class="mk-prog"><i id="mkProg"></i></div></div>'+
      '<div id="mkStatusMsg" class="cm-status" role="status" aria-live="polite"></div>'+
-     '<div class="cm-actions"><button type="button" class="btn ghost" id="mkCancel">إلغاء</button><button type="button" class="btn primary" id="mkSave">حفظ</button></div>'+
+     '<div class="cm-actions"><button type="button" class="btn ghost" id="mkCancel"></button><button type="button" class="btn primary" id="mkSave"></button></div>'+
    '</div>';
   document.body.appendChild(ov);
-  ov.addEventListener('click', e => { if(e.target===ov && !busy) closeForm(); });
+  Array.prototype.forEach.call(ov.querySelector('.mk-modal').children, (c,i) => c.style.setProperty('--i', i));
+
+  ov.addEventListener('click', e => {
+    const ob = e.target.closest('.mk-dd-opt');
+    if(ob){ setVal(ob.closest('.mk-dd').getAttribute('data-n'), ob.getAttribute('data-v')); closeDDs(); return; }
+    const bt = e.target.closest('.mk-dd-btn');
+    if(bt){ const dd = bt.parentNode; dd.classList.contains('open') ? closeDDs() : openDD(dd); return; }
+    const ch = e.target.closest('.mk-chip');
+    if(ch){ toggleSoft(ch.getAttribute('data-s')); return; }
+    closeDDs();
+    if(e.target===ov && !busy) closeForm();
+  });
   $('mkClose').onclick = $('mkCancel').onclick = () => { if(!busy) closeForm(); };
   $('mkVid').onchange = e => onVideo(e.target.files[0]);
   $('mkPick').onclick = () => $('mkImg').click();
   $('mkImg').onchange = onImg;
   $('mkSave').onclick = save;
-  document.addEventListener('keydown', e => { if(e.key==='Escape' && ov.classList.contains('open') && !busy) closeForm(); });
+  // Escape: يقفل القايمة المفتوحة الأول، وبعدها النافذة
+  document.addEventListener('keydown', e => {
+    if(e.key!=='Escape' || !ov.classList.contains('open')) return;
+    if(ov.querySelector('.mk-dd.open')){ closeDDs(); e.stopPropagation(); e.preventDefault(); return; }
+    if(!busy) closeForm();
+  }, true);
 }
+
+/* النصوص بتتغيّر حسب لغة الموقع */
+function applyTexts(){
+  const ov = $('mkOv'); if(!ov) return;
+  $('mkTitle').textContent = mode==='edit' ? t('editT') : t('addT');
+  $('mkVidName').textContent = vidFile ? vidFile.name + '  ('+fmtSize(vidFile.size)+')' : t('pickVid');
+  $('mkPick').textContent = t('pickThumb'); $('mkHint').textContent = t('thumbHint');
+  $('mkTa').placeholder = t('nameAr'); $('mkTe').placeholder = t('nameEn'); $('mkDesc').placeholder = t('desc');
+  ov.querySelectorAll('[data-l]').forEach(el => { el.textContent = t(el.getAttribute('data-l')); });
+  $('mkCancel').textContent = t('cancel');
+  if(!busy) $('mkSave').textContent = mode==='edit' ? t('saveEdit') : t('upload');
+  if(!thumbBlob && !(mode==='edit' && editing && editing.thumb)) showThumb(null);
+  renderDD('cat'); renderDD('ar'); renderDD('status'); renderChips();
+}
+document.documentElement && new MutationObserver(() => {
+  applyTexts(); updateAddBtns();
+  document.querySelectorAll('.mk-bar').forEach(b => b.remove()); decorate();
+}).observe(document.documentElement, { attributes:true, attributeFilter:['lang'] });
+
+/* ---------- القوايم المنسدلة (بتتمدد من النص) ---------- */
+function renderDD(n){
+  const dd = $('mkdd-'+n); if(!dd) return;
+  const list = LISTS[n], cur = list.find(o => o[0]===val[n]) || list[0];
+  dd.querySelector('.mk-dd-val').textContent = lab(cur);
+  dd.querySelector('.mk-dd-list').innerHTML = list.map((o,i) =>
+    '<button type="button" role="option" class="mk-dd-opt'+(o[0]===val[n]?' sel':'')+'" data-v="'+o[0]+'" style="--i:'+i+'"><span>'+lab(o)+'</span>'+IC.check+'</button>').join('');
+}
+function setVal(n, v){ val[n] = v; renderDD(n); }
+function closeDDs(except){
+  document.querySelectorAll('.mk-dd.open').forEach(d => { if(d!==except){ d.classList.remove('open'); d.querySelector('.mk-dd-btn').setAttribute('aria-expanded','false'); } });
+}
+function openDD(dd){
+  closeDDs(dd);
+  const list = dd.querySelector('.mk-dd-list'), btn = dd.querySelector('.mk-dd-btn'), modal = $('mkOv').querySelector('.mk-modal');
+  list.style.maxHeight = ''; list.style.top = '0px';
+  const mr = modal.getBoundingClientRect(), br = btn.getBoundingClientRect();
+  const minT = Math.max(mr.top, 0) + 8, maxB = Math.min(mr.bottom, window.innerHeight) - 8;
+  list.style.maxHeight = Math.max(120, maxB - minT) + 'px';
+  const h = list.offsetHeight, center = br.top + br.height/2;
+  let top = center - h/2;
+  top = Math.max(minT, Math.min(top, maxB - h));
+  list.style.top = (top - br.top) + 'px';
+  list.style.transformOrigin = '50% ' + (center - top) + 'px';
+  dd.classList.add('open'); btn.setAttribute('aria-expanded','true');
+  const sel = list.querySelector('.sel'); if(sel) sel.scrollIntoView({ block:'nearest' });
+}
+
+/* ---------- اختيار البرامج (أكتر من واحد) ---------- */
+function renderChips(){
+  const box = $('mkChips'); if(!box) return;
+  box.innerHTML = SOFT.concat(softExtra).map(s =>
+    '<button type="button" class="mk-chip'+(softSel.indexOf(s)>-1?' on':'')+'" data-s="'+esc(s)+'"><i>'+IC.check+'</i>'+esc(s)+'</button>').join('');
+}
+function toggleSoft(s){
+  const i = softSel.indexOf(s);
+  if(i>-1) softSel.splice(i,1); else softSel.push(s);
+  renderChips();
+}
+const softValue = () => SOFT.concat(softExtra).filter(s => softSel.indexOf(s)>-1).join(', ');
+
 const say = (m, bad) => { const e = $('mkStatusMsg'); e.textContent = m||''; e.className = 'cm-status' + (bad?' bad':' good'); };
-function showThumb(src){ $('mkThumb').innerHTML = src ? '<img src="'+esc(src)+'" alt="">' : '<span>صورة مصغّرة</span>'; }
+function showThumb(src){ $('mkThumb').innerHTML = src ? '<img src="'+esc(src)+'" alt="">' : '<span>'+t('thumb')+'</span>'; }
 let thumbObj = null;
 function setThumbBlob(b){ if(thumbObj) URL.revokeObjectURL(thumbObj); thumbBlob = b; thumbObj = b ? URL.createObjectURL(b) : null; showThumb(thumbObj); }
 
 function openForm(p){
   buildModal();
-  mode = p ? 'edit' : 'add'; editing = p || null; vidFile = null; thumbChanged = false;
+  mode = p ? 'edit' : 'add'; editing = p || null; vidFile = null; thumbChanged = false; closeDDs();
   setThumbBlob(null); $('mkVid').value = ''; $('mkImg').value = '';
-  $('mkTitle').textContent = p ? 'تعديل العمل' : 'إضافة عمل جديد';
+  $('mkFile').classList.remove('has');
   $('mkVidWrap').hidden = !!p;
-  $('mkVidName').textContent = 'اختر ملف الفيديو من جهازك';
   $('mkTa').value = p ? p.title_ar : ''; $('mkTe').value = p ? p.title_en : '';
-  $('mkDesc').value = p ? p.desc : ''; $('mkCat').value = p ? p.cat : 'short';
-  $('mkAr').value = p ? p.ar : '16:9'; $('mkDur').value = p ? p.dur : '';
-  $('mkStatus').value = p ? p.status : 'published'; $('mkSoft').value = p ? p.soft : '';
+  $('mkDesc').value = p ? p.desc : '';
+  $('mkDur').value = p ? p.dur : '';
+  val.cat = p ? p.cat : 'short'; val.ar = p ? p.ar : '16:9'; val.status = p ? p.status : 'published';
+  const list = p ? String(p.soft||'').split(',').map(s => s.trim()).filter(Boolean) : [];
+  softSel = list.slice(); softExtra = list.filter(s => SOFT.indexOf(s)===-1);
   if(p) showThumb(p.thumb);
   $('mkProgWrap').hidden = true; $('mkProg').style.width = '0'; say('');
-  $('mkSave').textContent = p ? 'حفظ التعديلات' : 'رفع ونشر';
+  busy = false; $('mkSave').disabled = false;
+  applyTexts();
   const ov = $('mkOv'); ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden';
 }
 function closeForm(){
   const ov = $('mkOv'); if(!ov) return;
-  ov.classList.remove('open'); ov.setAttribute('aria-hidden','true');
+  closeDDs(); ov.classList.remove('open'); ov.setAttribute('aria-hidden','true');
   const pf = document.querySelector('.portfolio-page.show'); document.body.style.overflow = pf ? 'hidden' : '';
 }
 
@@ -249,14 +378,15 @@ const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1
 
 async function onVideo(f){
   if(!f) return;
-  if(!/^video\//.test(f.type) && !/\.(mp4|mov|webm|mkv|m4v)$/i.test(f.name)) return say('الملف لازم يكون فيديو', true);
-  vidFile = f; $('mkVidName').textContent = f.name + '  ('+fmtSize(f.size)+')';
-  say('بقرأ بيانات الفيديو...');
+  if(!/^video\//.test(f.type) && !/\.(mp4|mov|webm|mkv|m4v)$/i.test(f.name)) return say(t('notVideo'), true);
+  vidFile = f; $('mkFile').classList.add('has');
+  $('mkVidName').textContent = f.name + '  ('+fmtSize(f.size)+')';
+  say(t('reading'));
   const m = await probe(f);
-  if(m.w && m.h){ const r = m.w/m.h; $('mkAr').value = r >= 1.2 ? '16:9' : r <= .8 ? '9:16' : '1:1'; }
+  if(m.w && m.h){ const r = m.w/m.h; setVal('ar', r >= 1.2 ? '16:9' : r <= .8 ? '9:16' : '1:1'); }
   if(m.d && isFinite(m.d)) $('mkDur').value = fmtDur(m.d);
   if(m.thumb && !thumbChanged) setThumbBlob(m.thumb);
-  say(m.w ? 'تم — راجع البيانات واضغط رفع' : 'المتصفح مقدرش يقرأ الفيديو، اكتب المدة والنسبة بإيدك', !m.w);
+  say(m.w ? t('readOk') : t('readFail'), !m.w);
 }
 function onImg(e){
   const f = e.target.files[0]; e.target.value = ''; if(!f || !/^image\//.test(f.type)) return;
@@ -267,65 +397,67 @@ function onImg(e){
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
     c.toBlob(b => { thumbChanged = true; setThumbBlob(b); }, 'image/jpeg', .88);
   };
-  img.onerror = () => { URL.revokeObjectURL(url); say('الصورة مش مقروءة', true); };
+  img.onerror = () => { URL.revokeObjectURL(url); say(t('errImg'), true); };
   img.src = url;
 }
 
 async function save(){
   if(busy) return;
   const ta = $('mkTa').value.trim(), te = $('mkTe').value.trim();
-  if(mode==='add' && !vidFile) return say('اختار ملف الفيديو الأول', true);
-  if(!ta && !te) return say('اكتب اسم للعمل (عربي أو إنجليزي)', true);
+  if(mode==='add' && !vidFile) return say(t('pickFirst'), true);
+  if(!ta && !te) return say(t('needName'), true);
   const row = {
     title_ar: ta || te, title_en: te || ta, descr: $('mkDesc').value.trim(),
-    cat: $('mkCat').value, ar: $('mkAr').value, dur: $('mkDur').value.trim(),
-    soft: $('mkSoft').value.trim(), status: $('mkStatus').value
+    cat: val.cat, ar: val.ar, dur: $('mkDur').value.trim(),
+    soft: softValue(), status: val.status
   };
   busy = true; const btn = $('mkSave'); btn.disabled = true; say('');
   const prog = $('mkProg'); $('mkProgWrap').hidden = true;
   const up = [];
   try{
     if(mode==='add'){
-      $('mkProgWrap').hidden = false; btn.textContent = 'جاري رفع الفيديو...';
+      $('mkProgWrap').hidden = false; btn.textContent = t('uploading');
       const vp = 'videos/'+uid()+'.'+extOf(vidFile);
       await upload(vp, vidFile, f => { prog.style.width = Math.round(f*95)+'%'; }); up.push(vp);
       row.video = pubUrl(vp); row.video_path = vp;
       if(thumbBlob){ const tp = 'thumbs/'+uid()+'.jpg'; await upload(tp, thumbBlob); up.push(tp); row.thumb = pubUrl(tp); row.thumb_path = tp; }
-      prog.style.width = '98%'; btn.textContent = 'بحفظ البيانات...';
+      prog.style.width = '98%'; btn.textContent = t('saving');
       const r = await rest('projects', { method:'POST', headers:{Prefer:'return=representation'}, body:JSON.stringify(row) });
-      if(!r.ok) throw new Error('معرفتش أحفظ البيانات — اتأكد إنك شغّلت ملف admin-setup.sql');
+      if(!r.ok) throw new Error(t('errSave'));
       prog.style.width = '100%';
     }else{
-      btn.textContent = 'بحفظ...';
+      btn.textContent = t('savingShort');
       let oldThumb = null;
       if(thumbChanged && thumbBlob){
         const tp = 'thumbs/'+uid()+'.jpg'; await upload(tp, thumbBlob); up.push(tp);
         row.thumb = pubUrl(tp); row.thumb_path = tp; oldThumb = editing.thumb_path;
       }
       const r = await rest('projects?id=eq.'+encodeURIComponent(editing.dbId), { method:'PATCH', headers:{Prefer:'return=representation'}, body:JSON.stringify(row) });
-      if(!r.ok || !(await r.json()).length) throw new Error('معرفتش أحفظ التعديل (تأكد إنك مسجّل دخول)');
+      if(!r.ok || !(await r.json()).length) throw new Error(t('errEdit'));
       if(oldThumb) removeFiles([oldThumb]);
     }
     busy = false; btn.disabled = false; closeForm();
-    toast(mode==='add' ? 'تم رفع العمل ✓' : 'تم حفظ التعديلات ✓');
+    toast(mode==='add' ? t('done') : t('doneEdit'));
     await loadDB();
   }catch(e){
     if(up.length) removeFiles(up);               // نظّف اللي اترفع لو حصلت مشكلة
-    say(e.message || 'حصلت مشكلة، حاول تاني', true);
-    busy = false; btn.disabled = false; btn.textContent = mode==='add' ? 'رفع ونشر' : 'حفظ التعديلات';
+    say(e.message || t('errGen'), true);
+    busy = false; btn.disabled = false; btn.textContent = mode==='add' ? t('upload') : t('saveEdit');
   }
 }
 
 /* ---------- علامة الأدمن في الشريط العلوي ---------- */
+function updateAddBtns(){ document.querySelectorAll('.mk-addbtn').forEach(b => { b.title = t('add'); const s = b.querySelector('span'); if(s) s.textContent = t('add'); }); }
 function mountButtons(){
   document.querySelectorAll('#nav .navctrls, .pfnav .navctrls').forEach(box => {
     if(box.querySelector('.mk-addbtn')) return;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'pillbtn mk-addbtn'; b.title = 'إضافة عمل جديد';
-    b.innerHTML = IC.plus + '<span>إضافة عمل</span>';
+    b.type = 'button'; b.className = 'pillbtn mk-addbtn';
+    b.innerHTML = IC.plus + '<span></span>';
     b.onclick = () => openForm(null);
     box.insertBefore(b, box.firstChild);
   });
+  updateAddBtns();
 }
 function unmountButtons(){ document.querySelectorAll('.mk-addbtn,.mk-bar').forEach(e => e.remove()); document.querySelectorAll('.mk-draft').forEach(e => e.classList.remove('mk-draft')); }
 
@@ -338,38 +470,111 @@ function sync(){
   loadDB();
 }
 
-/* ---------- ستايل ---------- */
+/* ---------- ستايل + حركات ---------- */
 const css = document.createElement('style');
 css.textContent = `
+/* زرار الإضافة فوق */
 .mk-addbtn{display:inline-flex;align-items:center;gap:6px;color:#fff!important;border-color:transparent!important;font-weight:700;cursor:pointer;font-family:inherit;
-  background:linear-gradient(90deg,var(--blue),var(--purple))!important;box-shadow:0 6px 18px -6px color-mix(in srgb,var(--blue) 70%,transparent)}
-.mk-addbtn:hover{box-shadow:0 8px 26px -4px color-mix(in srgb,var(--purple) 75%,transparent)}
+  background:linear-gradient(90deg,var(--blue),var(--purple))!important;box-shadow:0 6px 18px -6px color-mix(in srgb,var(--blue) 70%,transparent);transition:transform .3s,box-shadow .3s}
+.mk-addbtn:hover{box-shadow:0 8px 26px -4px color-mix(in srgb,var(--purple) 75%,transparent);transform:translateY(-1px)}
+.mk-addbtn:active{transform:scale(.95)}
+.mk-addbtn svg{transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.mk-addbtn:hover svg{transform:rotate(90deg)}
+
+/* أزرار الكروت */
+.pcard{position:relative}
 .mk-bar{position:absolute;top:8px;inset-inline-start:8px;z-index:4;display:flex;gap:6px;align-items:center;direction:ltr}
 .mk-bar button{display:inline-flex;align-items:center;gap:4px;height:32px;min-width:32px;justify-content:center;padding:0 8px;border-radius:100px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;
   border:1px solid rgba(255,255,255,.25);background:rgba(8,12,24,.72);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:.25s}
-.mk-bar button:hover{background:color-mix(in srgb,var(--blue) 70%,#000);box-shadow:0 0 18px color-mix(in srgb,var(--blue) 60%,transparent)}
+.mk-bar button:hover{background:color-mix(in srgb,var(--blue) 70%,#000);box-shadow:0 0 18px color-mix(in srgb,var(--blue) 60%,transparent);transform:translateY(-1px)}
 .mk-bar .mk-del:hover,.mk-bar .mk-del.armed{background:#ff6b7a;border-color:#ff6b7a;box-shadow:0 0 18px rgba(255,107,122,.6)}
 .mk-badge{padding:5px 10px;border-radius:100px;font-size:11px;font-weight:800;background:#f5a524;color:#1a1200}
-.pcard{position:relative}
 .pcard.mk-draft{opacity:.6}
 .pcard.mk-draft:hover{opacity:1}
+
+/* النافذة: من غير شريط تمرير أبيض */
+#mkOv,.mk-modal,.mk-dd-list{scrollbar-width:none;-ms-overflow-style:none}
+#mkOv::-webkit-scrollbar,.mk-modal::-webkit-scrollbar,.mk-dd-list::-webkit-scrollbar{display:none;width:0;height:0}
 .mk-modal{max-height:100%;gap:12px}
-.mk-file{display:flex;align-items:center;justify-content:center;text-align:center;padding:20px 14px;border:1.5px dashed var(--border2);border-radius:14px;cursor:pointer;
-  color:var(--text2);font-size:14px;transition:.25s;overflow-wrap:anywhere}
-.mk-file:hover{border-color:var(--blue);color:var(--text);background:color-mix(in srgb,var(--blue) 8%,transparent)}
+
+/* دخول العناصر واحد ورا التاني */
+@keyframes mkRise{from{opacity:0;transform:translateY(18px) scale(.98);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+.cm-ov.open .mk-modal>*:not(.cm-x){animation:mkRise .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*45ms + 90ms)}
+@keyframes mkPop{0%{opacity:0;transform:scale(.6) rotate(-4deg)}70%{transform:scale(1.06)}100%{opacity:1;transform:none}}
+@keyframes mkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes mkDash{to{background-position:200% 0}}
+@keyframes mkShine{from{transform:translateX(-120%)}to{transform:translateX(220%)}}
+
+/* منطقة اختيار الفيديو */
+.mk-file{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:22px 14px;border:1.5px dashed var(--border2);border-radius:16px;cursor:pointer;
+  color:var(--text2);font-size:14px;transition:.35s;overflow:hidden;overflow-wrap:anywhere}
+.mk-file svg{color:var(--blue);animation:mkFloat 2.6s ease-in-out infinite}
+.mk-file::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity .35s;pointer-events:none;
+  background:radial-gradient(220px circle at 50% 0%,color-mix(in srgb,var(--blue) 22%,transparent),transparent 70%)}
+.mk-file:hover{border-color:var(--blue);color:var(--text);transform:translateY(-2px)}
+.mk-file:hover::before{opacity:1}
+.mk-file.has{border-style:solid;border-color:#3ecf8e;color:var(--text);background:color-mix(in srgb,#3ecf8e 8%,transparent)}
+.mk-file.has svg{color:#3ecf8e;animation:none}
+
+/* الصورة المصغّرة */
 .mk-thumbrow{display:flex;gap:14px;align-items:center}
-.mk-thumb{width:92px;height:64px;flex-shrink:0;border-radius:10px;border:1px dashed var(--border2);overflow:hidden;display:flex;align-items:center;justify-content:center;
+.mk-thumb{width:92px;height:64px;flex-shrink:0;border-radius:12px;border:1px dashed var(--border2);overflow:hidden;display:flex;align-items:center;justify-content:center;
   font-size:11px;color:var(--text3);text-align:center;background:color-mix(in srgb,var(--bg) 40%,transparent)}
-.mk-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.mk-thumb img{width:100%;height:100%;object-fit:cover;display:block;animation:mkPop .5s cubic-bezier(.2,.8,.2,1)}
 .mk-thumbside{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
 .mk-thumbside small{color:var(--text3);font-size:12px}
-.mk-link{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:13.5px;font-weight:600;font-family:inherit}
+.mk-link{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font-size:13.5px;font-weight:600;font-family:inherit;text-align:start}
+
+/* الحقول */
 .mk-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mk-sel{appearance:auto;cursor:pointer}
-.mk-sel option{background:var(--card);color:var(--text)}
+.mk-field{min-width:0}
+.mk-lbl{display:block;font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px}
+
+/* القوايم المنسدلة: بتتمدد من النص */
+.mk-dd{position:relative}
+.mk-dd.open{z-index:40}
+.mk-dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:46px;padding:12px 14px;text-align:start;cursor:pointer;
+  background:color-mix(in srgb,var(--bg) 40%,transparent);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;transition:.3s}
+.mk-dd-btn:hover{border-color:color-mix(in srgb,var(--blue) 70%,var(--border2))}
+.mk-dd.open .mk-dd-btn,.mk-dd-btn:focus-visible{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 18%,transparent),0 0 26px -4px color-mix(in srgb,var(--blue) 45%,transparent)}
+.mk-chev{flex-shrink:0;color:var(--text3);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.mk-dd.open .mk-chev{transform:rotate(180deg);color:var(--blue)}
+.mk-dd-list{position:absolute;inset-inline:0;top:0;z-index:2;padding:6px;overflow-y:auto;border-radius:16px;
+  background:color-mix(in srgb,var(--card) 96%,#000);border:1px solid color-mix(in srgb,var(--blue) 55%,var(--border2));
+  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 40px -10px color-mix(in srgb,var(--blue) 60%,transparent);
+  visibility:hidden;opacity:0;pointer-events:none;transform:scaleY(.12) scaleX(.94);
+  transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .18s ease,visibility 0s linear .32s}
+.mk-dd.open .mk-dd-list{visibility:visible;opacity:1;pointer-events:auto;transform:none;
+  transition:transform .42s cubic-bezier(.2,.9,.25,1.05),opacity .2s ease,visibility 0s}
+.mk-dd-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:11px 12px;border:0;border-radius:11px;background:none;color:var(--text);
+  font-family:inherit;font-size:14.5px;cursor:pointer;text-align:start;opacity:0;transform:translateY(8px) scale(.98);transition:background .2s,color .2s}
+.mk-dd.open .mk-dd-opt{opacity:1;transform:none;transition:opacity .3s ease,transform .38s cubic-bezier(.2,.8,.2,1),background .2s,color .2s;transition-delay:calc(var(--i,0)*38ms + 110ms),calc(var(--i,0)*38ms + 110ms),0s,0s}
+.mk-dd-opt:hover,.mk-dd-opt:focus-visible{outline:none;background:color-mix(in srgb,var(--blue) 16%,transparent)}
+.mk-dd-opt .mk-tick{opacity:0;transform:scale(.4);transition:.3s;color:var(--blue)}
+.mk-dd-opt.sel{color:var(--blue);font-weight:700}
+.mk-dd-opt.sel .mk-tick{opacity:1;transform:none}
+
+/* شرائح البرامج */
+.mk-chips{display:flex;flex-wrap:wrap;gap:8px}
+.mk-chip{display:inline-flex;align-items:center;padding:9px 15px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--text2);
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.mk-chip i{display:inline-flex;width:0;overflow:hidden;opacity:0;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.mk-chip:hover{border-color:var(--blue);color:var(--text);transform:translateY(-1px)}
+.mk-chip:active{transform:scale(.93)}
+.mk-chip.on{color:#fff;border-color:transparent;background:linear-gradient(90deg,var(--blue),var(--purple));box-shadow:0 8px 22px -8px color-mix(in srgb,var(--blue) 70%,transparent)}
+.mk-chip.on i{width:18px;opacity:1}
+.mk-chip .mk-tick{color:#fff}
+
+/* شريط التقدّم */
 .mk-prog{height:8px;border-radius:100px;background:color-mix(in srgb,var(--text) 12%,transparent);overflow:hidden}
-.mk-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .2s}
+.mk-prog i{display:block;position:relative;overflow:hidden;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .25s;border-radius:100px}
+.mk-prog i::after{content:"";position:absolute;inset:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:mkShine 1.1s linear infinite}
+
 @media (max-width:640px){.mk-addbtn span{display:none}.mk-addbtn{padding:8px 11px}.mk-two{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){
+  .cm-ov.open .mk-modal>*:not(.cm-x),.mk-file svg,.mk-prog i::after,.mk-thumb img{animation:none!important}
+  .mk-dd-list,.mk-dd-opt,.mk-chip,.mk-chip i{transition:none!important}
+}
 `;
 document.head.appendChild(css);
 
