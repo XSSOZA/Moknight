@@ -365,3 +365,6 @@ footer{padding:40px 0 calc(60px + env(safe-area-inset-bottom,0px));text-align:ce
   .navctrls{gap:6px}
   .pillbtn{padding:7px 10px}
 }
+
+/* منع أي عنصر من توسيع عرض الصفحة على الموبايل */
+html,body{overflow-x:clip;max-width:100%}
