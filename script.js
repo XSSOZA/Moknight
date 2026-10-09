@@ -268,6 +268,16 @@ document.addEventListener('keydown', e=>{
   if(pp.classList.contains('show')) closePortfolio();
 });
 
+  /* حركة ظهور اسم المطوّر لما توصل للفوتر */
+(function(){
+  const fb=document.querySelector('.footer-by'); if(!fb) return;
+  if(!('IntersectionObserver' in window)){ fb.classList.add('in'); return; }
+  const o=new IntersectionObserver(es=>{
+    es.forEach(en=>{ if(en.isIntersecting){ fb.classList.add('in'); o.disconnect(); } });
+  },{threshold:.4});
+  o.observe(fb);
+})();
+  
 applyTheme();
 applyLang();
 })();
