@@ -5,7 +5,7 @@
    املا القيمتين دول من Supabase (Project Settings > API):
    ============================================================ */
 const COMMENTS_CONFIG = {
-  SUPABASE_URL: '',       // مثال: 'https://abcdxyz.supabase.co'
+  SUPABASE_URL: 'https://qiqyttbhctxhyhrlghdr.supabase.co',       // مثال: 'https://abcdxyz.supabase.co'
   SUPABASE_ANON_KEY: 'sb_publishable_MJLyNGdLVT7C_vgOYownWg_MZinUNS5'   // الـ anon public key
 };
 /* لو سيبتهم فاضيين: التعليقات بتتخزن في متصفح الزائر نفسه بس (للتجربة). */
