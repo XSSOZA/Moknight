@@ -53,7 +53,7 @@ const projects = (typeof PROJECTS !== 'undefined' ? PROJECTS : []).map((p, i)=>{
   return o;
 });
 const settings = Object.assign({phone:'',email:'',youtube:'',instagram:'',facebook:'',discord:''}, typeof SETTINGS !== 'undefined' ? SETTINGS : {});
-
+window.MK_API = { projects: projects, rerender: function(){ renderFilters(); renderGrid(); renderLatestWork(); } };
 let activeFilter='all', searchTerm='';
 let currentProject=null, lastFocus=null;
 
@@ -202,7 +202,7 @@ function bindCards(box){
 function renderGrid(){
   const grid=$('grid'), empty=$('emptyState');
   const visible = projects.filter(p=>{
-    if(p.status!=='published') return false;
+    if(p.status!=='published' && !window.MK_ADMIN) return false;
     if(activeFilter!=='all' && p.cat!==activeFilter) return false;
     if(searchTerm){
       const hay=[p.title_ar,p.title_en,p.desc,p.soft].join(' ').toLowerCase();
