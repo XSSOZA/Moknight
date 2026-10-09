@@ -151,7 +151,7 @@ const CONTACT_TYPES=[
   href:v=>'https://wa.me/'+v.replace(/\D/g,''), sub:v=>'+'+v.replace(/\D/g,'')},
  {key:'email', label:()=>'Email',
   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg>',
-  href:v=>'mailto:'+v, sub:v=>v},
+  href:v=>'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(v), sub:v=>v},
  {key:'youtube', label:()=>'YouTube',
   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
   href:v=>v, sub:v=>v},
