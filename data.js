@@ -43,17 +43,6 @@ const SETTINGS = {
 //   video: 'media/project1.mp4'
 // },
 const PROJECTS = [
-  {
-    title_ar: '',
-    title_en: '',
-    desc: '',
-    cat: '',
-    ar: '',
-    dur: '',
-    soft: '',
-    status: '',
-    thumb: '',
-    video: ''
-  }
+  {  }
 ];
 
