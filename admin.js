@@ -44,7 +44,8 @@ const TX = {
     noPerm:'مفيش صلاحية — اتأكد من الإيميل في ملف SQL وإنك مسجّل دخول', conn:'مشكلة في الاتصال أثناء الرفع', failUp:'فشل الرفع', errGen:'حصلت مشكلة، حاول تاني',
     done:'تم رفع العمل ✓', doneEdit:'تم حفظ التعديلات ✓', shown:'العمل ظاهر دلوقتي للزوار', hidden:'العمل اتخفى عن الزوار',
     errVis:'معرفتش أغيّر الحالة (تأكد إنك مسجّل دخول)', deleted:'تم حذف العمل', errDel:'معرفتش أحذف (تأكد إنك مسجّل دخول)',
-    edit:'تعديل', hide:'إخفاء', show:'إظهار', del:'حذف', sure:'تأكيد الحذف؟', badge:'مخفي'
+    edit:'تعديل', hide:'إخفاء', show:'إظهار', del:'حذف', sure:'تأكيد الحذف؟', badge:'مخفي',
+    nameTaken:'الاسم ده مستخدم قبل كده، اختار اسم تاني', dailyLimit:'ينفع تكتب تعليق واحد بس كل 24 ساعة'
   },
   en:{
     add:'Add work', addT:'Add a new work', editT:'Edit work',
@@ -60,7 +61,8 @@ const TX = {
     noPerm:'No permission — check the email in the SQL file and that you are signed in', conn:'Connection problem while uploading', failUp:'Upload failed', errGen:'Something went wrong, try again',
     done:'Work uploaded ✓', doneEdit:'Changes saved ✓', shown:'The work is now visible to visitors', hidden:'The work is now hidden from visitors',
     errVis:"Couldn't change visibility (make sure you're signed in)", deleted:'Work deleted', errDel:"Couldn't delete (make sure you're signed in)",
-    edit:'Edit', hide:'Hide', show:'Show', del:'Delete', sure:'Confirm delete?', badge:'Hidden'
+    edit:'Edit', hide:'Hide', show:'Show', del:'Delete', sure:'Confirm delete?', badge:'Hidden',
+    nameTaken:'This name is already taken, please choose another', dailyLimit:'You can only post one comment every 24 hours'
   }
 };
 const L = () => document.documentElement.lang === 'en' ? 'en' : 'ar';
@@ -103,6 +105,32 @@ async function rest(path, opts){
   if(r.status===401 && getSession()) r = await go(true);
   return r;
 }
+
+/* ---------- التعليقات: الأدمن معفي من الحدود + رسائل واضحة للزائر ---------- */
+(function(){
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = async function(input, init){
+    const url = typeof input === 'string' ? input : ((input && input.url) || '');
+    const isPost = !!init && /^POST$/i.test(init.method || '') && url.indexOf(BASE+'/rest/v1/comments') === 0;
+    if(!isPost) return nativeFetch(input, init);
+    try{                                           // لو الأدمن داخل: ابعت التعليق بصلاحيته عشان السيرفر يعفيه
+      if(getSession()){
+        const tk = await token(false);
+        if(tk) init = Object.assign({}, init, { headers: Object.assign({}, init.headers, { Authorization:'Bearer '+tk }) });
+      }
+    }catch(e){}
+    const r = await nativeFetch(input, init);
+    if(!r.ok){
+      r.clone().json().then(j => {
+        const m = String((j && j.message) || '');
+        const msg = /name_taken/.test(m) ? t('nameTaken') : /daily_limit/.test(m) ? t('dailyLimit') : '';
+        if(!msg) return;
+        setTimeout(() => { const e = $('cmStatus'); if(e){ e.textContent = msg; e.className = 'cm-status bad'; } }, 60);
+      }).catch(()=>{});
+    }
+    return r;
+  };
+})();
 
 /* ---------- تخزين الملفات ---------- */
 const pubUrl = path => BASE+'/storage/v1/object/public/'+BUCKET+'/'+path;
@@ -473,6 +501,10 @@ function sync(){
 /* ---------- ستايل + حركات ---------- */
 const css = document.createElement('style');
 css.textContent = `
+/* إخفاء شريط التمرير في الموقع كله (التمرير نفسه شغال عادي) */
+html,body,*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+
 /* زرار الإضافة فوق */
 .mk-addbtn{display:inline-flex;align-items:center;gap:6px;color:#fff!important;border-color:transparent!important;font-weight:700;cursor:pointer;font-family:inherit;
   background:linear-gradient(90deg,var(--blue),var(--purple))!important;box-shadow:0 6px 18px -6px color-mix(in srgb,var(--blue) 70%,transparent);transition:transform .3s,box-shadow .3s}
@@ -499,7 +531,19 @@ css.textContent = `
 
 /* دخول العناصر واحد ورا التاني */
 @keyframes mkRise{from{opacity:0;transform:translateY(18px) scale(.98);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
-.cm-ov.open .mk-modal>*:not(.cm-x){animation:mkRise .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*45ms + 90ms)}
+.cm-ov.open .cm-modal>*:not(.cm-x):not(.cm-hp){animation:mkRise .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*45ms + 90ms)}
+.cm-modal>:nth-child(2){--i:1}.cm-modal>:nth-child(3){--i:2}.cm-modal>:nth-child(4){--i:3}.cm-modal>:nth-child(5){--i:4}
+.cm-modal>:nth-child(6){--i:5}.cm-modal>:nth-child(7){--i:6}.cm-modal>:nth-child(8){--i:7}.cm-modal>:nth-child(9){--i:8}
+
+/* زرار "أضف تعليقًا": علامة + بتلف لما تقرّب الماوس، زي زرار إضافة عمل */
+.cm-add{transition:box-shadow .5s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1),border-color .4s,background .35s}
+.cm-add svg{transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.cm-add:hover svg,.cm-add:focus-visible svg{transform:rotate(90deg)}
+@media (hover:hover){.cm-add:hover{transform:translateY(-2px)}}
+.cm-add:active{transform:scale(.95)}
+.cm-photo .cm-prev svg{transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.cm-photo:hover .cm-prev svg{transform:rotate(90deg)}
+.cm-prev:hover{border-color:var(--blue)}
 @keyframes mkPop{0%{opacity:0;transform:scale(.6) rotate(-4deg)}70%{transform:scale(1.06)}100%{opacity:1;transform:none}}
 @keyframes mkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes mkDash{to{background-position:200% 0}}
@@ -572,7 +616,7 @@ css.textContent = `
 
 @media (max-width:640px){.mk-addbtn span{display:none}.mk-addbtn{padding:8px 11px}.mk-two{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){
-  .cm-ov.open .mk-modal>*:not(.cm-x),.mk-file svg,.mk-prog i::after,.mk-thumb img{animation:none!important}
+  .cm-ov.open .cm-modal>*:not(.cm-x),.mk-file svg,.mk-prog i::after,.mk-thumb img{animation:none!important}
   .mk-dd-list,.mk-dd-opt,.mk-chip,.mk-chip i{transition:none!important}
 }
 `;
