@@ -71,3 +71,81 @@ textarea.cm-input{min-height:110px}
 
 /* honeypot: مخفي من غير ما يوسّع الصفحة (left:-9999px كان بيكبّر عرض الصفحة في RTL ويخلي الموبايل يصغّرها) */
 .cm-hp{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none;inset-inline-start:0;top:0}
+
+
+/* ===================================================================
+   v2 — إصلاحات + بلور + إضاءة + حذف
+   =================================================================== */
+
+/* سبب الدايرة البيضاء: display:block كان بيلغي خاصية hidden */
+[hidden]{display:none !important}
+
+/* سبب زرار "إلغاء" الأبيض: الـ <button> ليه خلفية بيضاء افتراضية من المتصفح */
+button.btn{font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;background:none;color:var(--text)}
+button.btn.primary{background:linear-gradient(90deg,var(--blue),var(--purple));color:#fff}
+button.btn.ghost{background:color-mix(in srgb,var(--card) 45%,transparent);color:var(--text);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+
+/* ----- إضاءة الأزرار (توهّج + لمعة بتتبع الماوس) ----- */
+.btn{position:relative;overflow:hidden;isolation:isolate;
+  transition:box-shadow .5s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1),border-color .4s,background .35s}
+.btn::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(130px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.30),transparent 65%)}
+.btn.ghost::after{background:radial-gradient(130px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--blue) 28%,transparent),transparent 65%)}
+@media (hover:hover){
+  .btn:hover::after{opacity:1}
+  .btn.primary:hover{box-shadow:0 14px 40px -6px color-mix(in srgb,var(--blue) 80%,transparent),0 0 36px color-mix(in srgb,var(--purple) 60%,transparent)}
+  .btn.ghost:hover{border-color:color-mix(in srgb,var(--blue) 75%,var(--border2));
+    box-shadow:0 0 32px color-mix(in srgb,var(--blue) 45%,transparent);background:color-mix(in srgb,var(--blue) 10%,transparent)}
+}
+.btn:active{transform:scale(.96);transition-duration:.12s}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 45%,transparent),0 0 28px color-mix(in srgb,var(--blue) 40%,transparent)}
+.btn:disabled{opacity:.6;cursor:wait}
+.cm-x{transition:.3s}
+.cm-x:hover{box-shadow:0 0 22px color-mix(in srgb,var(--purple) 55%,transparent);transform:rotate(90deg)}
+
+/* ----- كروت التعليقات: زجاج + بلور + لمعة ----- */
+.cm-item{position:relative;overflow:hidden;
+  background:color-mix(in srgb,var(--card) 62%,transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+  animation:cmIn .7s cubic-bezier(.2,.8,.2,1) both;
+  transition:border-color .4s,box-shadow .5s,transform .4s,opacity .45s,filter .45s}
+.cm-item::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--blue) 16%,transparent),transparent 70%)}
+@media (hover:hover){
+  .cm-item:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 18px 50px -20px color-mix(in srgb,var(--blue) 60%,transparent)}
+  .cm-item:hover::before{opacity:1}
+}
+.cm-item>*{position:relative}
+.cm-item.noanim{animation:none}
+.cm-item.removing{opacity:0;filter:blur(14px);transform:scale(.94);pointer-events:none}
+@keyframes cmIn{
+  from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(16px)}
+  60%{filter:blur(3px)}
+  to{opacity:1;transform:none;filter:blur(0)}}
+
+/* ----- النافذة: زجاج + دخول ببلور ----- */
+.cm-ov{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.cm-modal{background:color-mix(in srgb,var(--card) 84%,transparent);
+  -webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);
+  filter:blur(10px);opacity:0;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1),filter .45s,opacity .35s}
+.cm-ov.open .cm-modal{filter:blur(0);opacity:1}
+.cm-input{background:color-mix(in srgb,var(--bg) 40%,transparent)}
+.cm-input:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 20%,transparent),0 0 26px -4px color-mix(in srgb,var(--blue) 45%,transparent)}
+
+/* ----- زرار الحذف (للأدمن بس) ----- */
+.cm-del{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;
+  border:1px solid color-mix(in srgb,#ff6b7a 35%,transparent);background:color-mix(in srgb,#ff6b7a 8%,transparent);
+  color:#ff6b7a;border-radius:100px;padding:4px 10px;font-size:12px;font-weight:700;transition:.3s;flex-shrink:0}
+.cm-del:hover,.cm-del:focus-visible{outline:none;background:color-mix(in srgb,#ff6b7a 20%,transparent);box-shadow:0 0 22px color-mix(in srgb,#ff6b7a 50%,transparent)}
+.cm-del.armed{background:#ff6b7a;color:#fff;box-shadow:0 0 26px color-mix(in srgb,#ff6b7a 65%,transparent)}
+.cm-admin{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:18px;font-size:13px;color:var(--text3)}
+.cm-admin button{background:none;border:0;color:var(--text2);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:13px}
+.cm-admin button:hover{color:var(--text)}
+
+@media (max-width:640px){
+  .cm-modal{filter:blur(8px)}
+  .cm-actions .btn{flex:1}
+}
+@media (prefers-reduced-motion:reduce){.cm-modal{filter:none}.cm-item{animation:none}}
