@@ -42,7 +42,3 @@ const SETTINGS = {
 //   thumb: 'media/project1-thumb.jpg',
 //   video: 'media/project1.mp4'
 // },
-const PROJECTS = [
-  [  ]
-];
-
