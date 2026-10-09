@@ -44,16 +44,16 @@ const SETTINGS = {
 // },
 const PROJECTS = [
   {
-    title_ar: 'لان كد المشكلة',
-    title_en: 'Project 1',
-    desc: 'فيديو قصير',
-    cat: 'short',
-    ar: '9:16',
-    dur: '00:30',
-    soft: 'Premiere Pro, After Effects',
-    status: 'published',
-    thumb: 'media/project1-thumb.jpg',
-    video: 'media/project1.mp4'
+    title_ar: '',
+    title_en: '',
+    desc: '',
+    cat: '',
+    ar: '',
+    dur: '',
+    soft: '',
+    status: '',
+    thumb: '',
+    video: ''
   }
 ];
 
