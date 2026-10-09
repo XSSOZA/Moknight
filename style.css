@@ -148,8 +148,8 @@ section{padding:70px 0}
 .toolchip{padding:9px 16px;border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:600;background:var(--card)}
 
 /* CONTACT */
-.contactgrid{display:flex;flex-wrap:wrap;align-items:stretch;gap:16px}
-.ccard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;display:flex;align-items:center;gap:14px;transition:.3s;flex:1 1 auto;min-width:min(100%,220px);max-width:100%}
+.contactgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;display:flex;align-items:center;gap:14px;transition:.3s}
 .ccard:hover{border-color:var(--blue);transform:translateY(-3px)}
 .cicon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cicon svg{width:20px;height:20px;color:#fff}
@@ -301,8 +301,6 @@ footer{padding:40px 0 60px;text-align:center;color:var(--text3);font-size:13px}
 
 /* contact cards */
 .csub{color:var(--text3);font-size:12.5px}
-.ccard>div{min-width:0;flex:1}
-.ccard .csub{display:inline-block;overflow-wrap:anywhere;word-break:break-word}
 .ccard.off{opacity:.5;pointer-events:none}
 
 /* accessibility + touch */
