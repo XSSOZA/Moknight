@@ -10,7 +10,7 @@
 // Leave a value as '' (empty quotes) to hide that card on the site.
 const SETTINGS = {
   phone: '201014189958',      // WhatsApp number: country code + number, digits only, no + or spaces
-  email: 'yousseffathytalat@gmail.com',                  // e.g. 'hello@moknight.com'
+  email: '',                  // e.g. 'hello@moknight.com'
   youtube: '',                // full URL, e.g. 'https://youtube.com/@moknight'
   instagram: '',              // full URL
   facebook: '',               // full URL
