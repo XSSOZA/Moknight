@@ -287,3 +287,17 @@ document.addEventListener('keydown', e=>{
 applyTheme();
 applyLang();
 })();
+
+/* رفع النوافذ فوق الكيبورد على الموبايل */
+(function(){
+  const vv = window.visualViewport; if(!vv) return;
+  const root = document.documentElement;
+  function upd(){
+    root.style.setProperty('--kb', Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px');
+    root.style.setProperty('--vh', vv.height + 'px');
+  }
+  vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd); upd();
+  document.addEventListener('focusin', e => {
+    if(e.target.closest && e.target.closest('.cm-modal')) setTimeout(() => e.target.scrollIntoView({ block:'center', behavior:'smooth' }), 300);
+  });
+})();
