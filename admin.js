@@ -875,3 +875,6 @@ loadAbout();
 loadDB();
 setInterval(sync, 1000);            // بيلقط الدخول/الخروج اللي بيحصل من قسم التعليقات
 })();
+if(adminOn) mountTools();
+renderTools();
+loadTools();
