@@ -149,3 +149,8 @@ button.btn.ghost{background:color-mix(in srgb,var(--card) 45%,transparent);color
   .cm-actions .btn{flex:1}
 }
 @media (prefers-reduced-motion:reduce){.cm-modal{filter:none}.cm-item{animation:none}}
+
+@media (max-width:640px){
+  .cm-ov{padding-bottom:var(--kb,0px)}
+  .cm-modal{max-height:calc(var(--vh,100dvh) - 12px)}
+}
