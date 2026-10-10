@@ -709,6 +709,163 @@ function openAbout(){
   $('abP1en').value = API.dict.en.about_p1; $('abP2en').value = API.dict.en.about_p2;
   $('abSt').textContent = ''; ov.classList.add('open');
 }
+  /* ---------- قسم البرامج (قابل للتعديل من الأدمن) ---------- */
+const TOOL_PRESETS = [
+  {id:'ae',n:'After Effects',a:'Ae',c:'#9999ff',b:'#00005b'},
+  {id:'pr',n:'Premiere Pro',a:'Pr',c:'#ea77ff',b:'#2a003d'},
+  {id:'ps',n:'Photoshop',a:'Ps',c:'#31a8ff',b:'#001e36'},
+  {id:'ai',n:'Illustrator',a:'Ai',c:'#ff9a00',b:'#330000'},
+  {id:'au',n:'Audition',a:'Au',c:'#00e4bb',b:'#00192e'},
+  {id:'lr',n:'Lightroom',a:'Lr',c:'#6fb8ff',b:'#001a33'},
+  {id:'dv',n:'DaVinci Resolve',a:'Dv',c:'#4ee0c1',b:'#0b2b27'},
+  {id:'cc',n:'CapCut',a:'Cc',c:'#f4f6fb',b:'#14161f'},
+  {id:'bl',n:'Blender',a:'Bl',c:'#ff8a3d',b:'#2a1200'},
+  {id:'c4',n:'Cinema 4D',a:'C4',c:'#6ea8ff',b:'#0a1530'},
+  {id:'fg',n:'Figma',a:'Fg',c:'#a259ff',b:'#1a0b2e'},
+  {id:'fc',n:'Final Cut Pro',a:'Fc',c:'#ff5f8a',b:'#2b0a14'}
+];
+const DEFAULT_TOOLS = [{p:'ae'},{p:'pr'},{p:'ps'},{p:'ai'}];
+let toolsData = DEFAULT_TOOLS.slice(), teDraft = [], teBlob = null, teColor = '#8caaff';
+function toolPreset(id){ return TOOL_PRESETS.find(x => x.id === id); }
+function toolName(t){ const p = t.p && toolPreset(t.p); return p ? p.n : (t.n || ''); }
+function renderTools(){
+  const g = $('toolGrid'); if(!g) return;
+  g.innerHTML = toolsData.map((t, i) => {
+    const p = t.p && toolPreset(t.p);
+    const icon = p
+      ? '<div class="ticon" style="--c:'+p.c+';--bgc:'+p.b+'">'+p.a+'</div>'
+      : (function(){ const c = /^#[0-9a-f]{6}$/i.test(t.c || '') ? t.c : '#8caaff'; return '<div class="ticon" style="--c:'+c+';--bgc:color-mix(in srgb,'+c+' 14%,#0a0e1a)">'+(t.img ? '<img src="'+esc(t.img)+'" alt="">' : esc((t.n || '?').slice(0,2)))+'</div>'; })();
+    return '<div class="tcard" style="--i:'+i+'">'+icon+'<div class="tname">'+esc(toolName(t))+'</div></div>';
+  }).join('');
+}
+async function loadTools(){
+  try{
+    const r = await rest('site_settings?key=eq.tools&select=value'); if(!r.ok) return;
+    const a = await r.json();
+    if(a[0] && a[0].value){ const v = JSON.parse(a[0].value); if(Array.isArray(v)){ toolsData = v; renderTools(); } }
+  }catch(e){}
+}
+function shrinkPng(file, max){
+  return new Promise((res, rej) => {
+    const im = new Image(), u = URL.createObjectURL(file);
+    im.onload = () => {
+      const s = Math.min(1, max/Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width*s); c.height = Math.round(im.height*s);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => b ? res(b) : rej(), 'image/png');
+    };
+    im.onerror = rej; im.src = u;
+  });
+}
+function vivid(r,g,b){
+  r/=255; g/=255; b/=255;
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b), d = mx-mn; let h = 0, s = 0, l = (mx+mn)/2;
+  if(d){ s = d/(1-Math.abs(2*l-1)); if(mx === r) h = ((g-b)/d)%6; else if(mx === g) h = (b-r)/d+2; else h = (r-g)/d+4; h *= 60; if(h < 0) h += 360; }
+  if(s > .2){ s = Math.max(s, .65); l = Math.min(Math.max(l, .5), .62); } else { l = Math.max(l, .8); }
+  const k = n => (n+h/30)%12, a = s*Math.min(l, 1-l), f = n => l-a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+  const hx = v => Math.round(v*255).toString(16).padStart(2,'0');
+  return '#'+hx(f(0))+hx(f(8))+hx(f(4));
+}
+function edgeColor(blob){
+  return new Promise(res => {
+    const im = new Image(), u = URL.createObjectURL(blob);
+    im.onload = () => {
+      const S = 64, c = document.createElement('canvas'); c.width = c.height = S;
+      const cx = c.getContext('2d'); cx.drawImage(im, 0, 0, S, S); URL.revokeObjectURL(u);
+      let d; try{ d = cx.getImageData(0, 0, S, S).data; }catch(e){ return res('#8caaff'); }
+      const pick = ring => {
+        let r = 0, g = 0, b = 0, n = 0;
+        for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+          if(ring && x > 5 && x < S-6 && y > 5 && y < S-6) continue;
+          const i = (y*S+x)*4; if(d[i+3] < 128) continue;
+          r += d[i]; g += d[i+1]; b += d[i+2]; n++;
+        }
+        return n ? [r/n, g/n, b/n, n] : null;
+      };
+      let a = pick(true); if(!a || a[3] < 40) a = pick(false);
+      res(a ? vivid(a[0], a[1], a[2]) : '#8caaff');
+    };
+    im.onerror = () => res('#8caaff'); im.src = u;
+  });
+}
+function mountTools(){
+  if(!window.MK_ADMIN || $('teEdit')) return;
+  const h = document.querySelector('#tools .secsub'); if(!h) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'teEdit'; b.className = 'btn ghost';
+  b.style.cssText = 'margin-top:14px;padding:8px 18px;font-size:13px';
+  b.textContent = 'تعديل البرامج / Edit';
+  b.onclick = openTools; h.parentNode.insertBefore(b, h.nextSibling);
+}
+function unmountTools(){ const b = $('teEdit'); if(b) b.remove(); }
+function drawTE(){
+  $('teCur').innerHTML = teDraft.length ? teDraft.map((t, i) =>
+    '<span class="te-chip">'+esc(toolName(t))+'<button type="button" data-del="'+i+'" aria-label="remove">&times;</button></span>').join('')
+    : '<span class="te-none">مفيش برامج</span>';
+  $('tePre').innerHTML = TOOL_PRESETS.map(p =>
+    '<button type="button" class="te-pre'+(teDraft.some(t => t.p === p.id) ? ' on' : '')+'" data-pre="'+p.id+'" style="--c:'+p.c+'">'+esc(p.n)+'</button>').join('');
+}
+function openTools(){
+  let ov = $('teOv');
+  if(!ov){
+    ov = document.createElement('div'); ov.className = 'cm-ov'; ov.id = 'teOv'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
+    ov.innerHTML =
+     '<div class="cm-modal">'+
+       '<button type="button" class="cm-x" id="teX" aria-label="close">&times;</button>'+
+       '<h3 class="cm-mtitle">تعديل البرامج</h3>'+
+       '<div class="te-lbl">برامجك الحالية (اضغط × للحذف)</div><div class="te-list" id="teCur"></div>'+
+       '<div class="te-lbl">اختار من الأساسية (اضغط للإضافة أو الإزالة)</div><div class="te-list" id="tePre"></div>'+
+       '<div class="te-lbl">أضف برنامج من بره</div>'+
+       '<input id="teName" class="cm-input" maxlength="30" placeholder="اسم البرنامج">'+
+       '<div class="mk-thumbrow"><div class="mk-thumb" id="teThumb">صورة</div>'+
+         '<div class="mk-thumbside"><button type="button" class="mk-link" id="tePick">اختر صورة البرنامج</button><input type="file" id="teFile" accept="image/*" hidden></div></div>'+
+       '<button type="button" class="btn ghost" id="teAdd">+ إضافة البرنامج</button>'+
+       '<div id="teSt" class="cm-status" role="status"></div>'+
+       '<div class="cm-actions"><button type="button" class="btn ghost" id="teCancel">إلغاء</button><button type="button" class="btn primary" id="teSave">حفظ</button></div>'+
+     '</div>';
+    document.body.appendChild(ov);
+    const close = () => ov.classList.remove('open');
+    $('teX').onclick = close; $('teCancel').onclick = close;
+    ov.addEventListener('click', e => { if(e.target === ov) close(); });
+    $('teCur').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if(d){ teDraft.splice(+d.dataset.del, 1); drawTE(); } });
+    $('tePre').addEventListener('click', e => {
+      const b = e.target.closest('[data-pre]'); if(!b) return;
+      const i = teDraft.findIndex(t => t.p === b.dataset.pre);
+      if(i > -1) teDraft.splice(i, 1); else teDraft.push({ p:b.dataset.pre });
+      drawTE();
+    });
+    $('tePick').onclick = () => $('teFile').click();
+    $('teFile').onchange = async e => {
+      const f = e.target.files[0]; if(!f) return;
+      try{ teBlob = await shrinkPng(f, 256); teColor = await edgeColor(teBlob); $('teThumb').innerHTML = '<img src="'+URL.createObjectURL(teBlob)+'" alt="">'; $('teThumb').style.boxShadow = '0 0 22px '+teColor; $('teThumb').style.borderColor = teColor; }
+      catch(err){ $('teSt').className = 'cm-status bad'; $('teSt').textContent = 'الصورة مش مقروءة'; }
+      e.target.value = '';
+    };
+    $('teAdd').onclick = async () => {
+      const name = $('teName').value.trim(), st = $('teSt'), btn = $('teAdd'); st.className = 'cm-status';
+      if(!name){ st.className = 'cm-status bad'; st.textContent = 'اكتب اسم البرنامج'; return; }
+      btn.disabled = true; st.textContent = '...';
+      try{
+        if(teBlob) teColor = await edgeColor(teBlob);
+        const item = { n:name, c:teColor };
+        if(teBlob){ const p = 'tools/'+uid()+'.png'; await upload(p, teBlob); item.img = pubUrl(p); }
+        teDraft.push(item); teBlob = null; teColor = '#8caaff'; $('teName').value = ''; $('teThumb').textContent = 'صورة'; $('teThumb').style.boxShadow = ''; $('teThumb').style.borderColor = ''; st.textContent = ''; drawTE();
+      }catch(err){ st.className = 'cm-status bad'; st.textContent = 'معرفتش أرفع الصورة'; }
+      btn.disabled = false;
+    };
+    $('teSave').onclick = async () => {
+      const btn = $('teSave'), st = $('teSt'); btn.disabled = true; st.className = 'cm-status'; st.textContent = '...';
+      try{
+        const r = await rest('site_settings?on_conflict=key', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates,return=representation' }, body:JSON.stringify([{ key:'tools', value:JSON.stringify(teDraft) }]) });
+        if(!r.ok) throw 0;
+        toolsData = teDraft.slice(); renderTools(); close(); toast('تم الحفظ ✓');
+      }catch(err){ st.className = 'cm-status bad'; st.textContent = 'معرفتش أحفظ — اتأكد إنك مسجّل دخول'; }
+      btn.disabled = false;
+    };
+  }
+  teDraft = toolsData.map(t => Object.assign({}, t)); teBlob = null; teColor = '#8caaff';
+  $('teSt').textContent = ''; drawTE(); ov.classList.add('open');
+}
    
 /* ---------- تشغيل ---------- */
 adminOn = !!getSession(); window.MK_ADMIN = adminOn;
