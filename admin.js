@@ -494,7 +494,7 @@ function sync(){
   const on = !!getSession();
   if(on === adminOn) return;
   adminOn = on; window.MK_ADMIN = on;
-   if(on){ mountButtons(); mountAbout(); } else { unmountButtons(); unmountAbout(); closeForm(); }
+    if(on){ mountButtons(); mountTools(); } else { unmountButtons(); unmountTools(); closeForm(); }
   loadDB();
 }
 
