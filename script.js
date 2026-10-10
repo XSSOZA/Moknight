@@ -55,7 +55,7 @@ const projects = (typeof PROJECTS !== 'undefined' ? PROJECTS : []).map((p, i)=>{
   return o;
 });
 const settings = Object.assign({phone:'',email:'',youtube:'',instagram:'',facebook:'',discord:''}, typeof SETTINGS !== 'undefined' ? SETTINGS : {});
-window.MK_API = { projects: projects, rerender: function(){ renderFilters(); renderGrid(); renderLatestWork(); } };
+window.MK_API = { projects: projects, dict: dict, applyLang: applyLang, rerender: function(){ renderFilters(); renderGrid(); renderLatestWork(); } };
 let activeFilter='all', searchTerm='';
 let currentProject=null, lastFocus=null;
 
