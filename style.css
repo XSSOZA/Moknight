@@ -384,3 +384,7 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
   50%{filter:blur(0) drop-shadow(0 0 24px color-mix(in srgb,var(--purple) 75%,transparent))}}
 @keyframes fbShift{to{background-position:200% center}}
 @media (prefers-reduced-motion:reduce){.footer-by,.footer-by.in{opacity:1;transform:none;filter:none;animation:none}}
+
+.pflogo{display:flex;align-items:center;gap:10px}
+.pfnav .backbtn{justify-self:start}
+.pfnav .navctrls{justify-self:end}
