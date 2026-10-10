@@ -654,10 +654,10 @@ function shrink(file, max){
 }
 function mountAbout(){
   if(!window.MK_ADMIN || $('abEdit')) return;
-  const h = document.querySelector('#about .sectitle'); if(!h) return;
+  const h = document.querySelector('#about .tools'); if(!h) return;
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'abEdit'; b.className = 'btn ghost';
-  b.style.cssText = 'margin-bottom:16px;padding:8px 18px;font-size:13px';
+  b.style.cssText = 'margin-top:22px;padding:8px 18px;font-size:13px';
   b.textContent = 'تعديل هذا القسم / Edit';
   b.onclick = openAbout; h.parentNode.insertBefore(b, h.nextSibling);
 }
