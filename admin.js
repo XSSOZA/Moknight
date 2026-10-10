@@ -494,7 +494,7 @@ function sync(){
   const on = !!getSession();
   if(on === adminOn) return;
   adminOn = on; window.MK_ADMIN = on;
-  if(on) mountButtons(); else { unmountButtons(); closeForm(); }
+   if(on){ mountButtons(); mountAbout(); } else { unmountButtons(); unmountAbout(); closeForm(); }
   loadDB();
 }
 
@@ -713,6 +713,8 @@ function openAbout(){
 /* ---------- تشغيل ---------- */
 adminOn = !!getSession(); window.MK_ADMIN = adminOn;
 if(adminOn) mountButtons();
+   if(adminOn) mountAbout();
+loadAbout();
 loadDB();
 setInterval(sync, 1000);            // بيلقط الدخول/الخروج اللي بيحصل من قسم التعليقات
 })();
