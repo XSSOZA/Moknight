@@ -654,7 +654,7 @@ function shrink(file, max){
 }
 function mountAbout(){
   if(!window.MK_ADMIN || $('abEdit')) return;
-  const h = document.querySelector('#about .tools'); if(!h) return;
+    const h = document.querySelector('#about [data-i18n="about_p2"]'); if(!h) return;
   const b = document.createElement('button');
   b.type = 'button'; b.id = 'abEdit'; b.className = 'btn ghost';
   b.style.cssText = 'margin-top:22px;padding:8px 18px;font-size:13px';
