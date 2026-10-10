@@ -622,6 +622,94 @@ html,body,*{scrollbar-width:none;-ms-overflow-style:none}
 `;
 document.head.appendChild(css);
 
+   /* ---------- تعديل قسم "عني" ---------- */
+let aboutData = {}, abBlob = null;
+function applyAbout(){
+  ['p1','p2'].forEach(n => ['ar','en'].forEach(l => { const v = aboutData['about_'+n+'_'+l]; if(v) API.dict[l]['about_'+n] = v; }));
+  const box = $('aboutBox');
+  if(box && aboutData.about_img){
+    box.style.overflow = 'hidden';
+    box.innerHTML = '<img src="'+esc(aboutData.about_img)+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block">';
+  }
+  API.applyLang();
+}
+async function loadAbout(){
+  try{
+    const r = await rest('site_settings?select=key,value'); if(!r.ok) return;
+    aboutData = {}; (await r.json()).forEach(x => aboutData[x.key] = x.value);
+    applyAbout();
+  }catch(e){}
+}
+function shrink(file, max){
+  return new Promise((res, rej) => {
+    const im = new Image(), u = URL.createObjectURL(file);
+    im.onload = () => {
+      const s = Math.min(1, max/Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width*s); c.height = Math.round(im.height*s);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => b ? res(b) : rej(), 'image/jpeg', .88);
+    };
+    im.onerror = rej; im.src = u;
+  });
+}
+function mountAbout(){
+  if(!window.MK_ADMIN || $('abEdit')) return;
+  const h = document.querySelector('#about .sectitle'); if(!h) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'abEdit'; b.className = 'btn ghost';
+  b.style.cssText = 'margin-bottom:16px;padding:8px 18px;font-size:13px';
+  b.textContent = 'تعديل هذا القسم / Edit';
+  b.onclick = openAbout; h.parentNode.insertBefore(b, h.nextSibling);
+}
+function unmountAbout(){ const b = $('abEdit'); if(b) b.remove(); }
+function openAbout(){
+  let ov = $('abOv');
+  if(!ov){
+    ov = document.createElement('div'); ov.className = 'cm-ov'; ov.id = 'abOv'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
+    ov.innerHTML =
+     '<div class="cm-modal">'+
+       '<button type="button" class="cm-x" id="abX" aria-label="close">&times;</button>'+
+       '<h3 class="cm-mtitle">تعديل قسم "عني"</h3>'+
+       '<textarea id="abP1ar" class="cm-input" rows="3" placeholder="الفقرة الأولى (عربي)"></textarea>'+
+       '<textarea id="abP2ar" class="cm-input" rows="3" placeholder="الفقرة التانية (عربي)"></textarea>'+
+       '<textarea id="abP1en" class="cm-input" rows="3" dir="ltr" placeholder="First paragraph (English)"></textarea>'+
+       '<textarea id="abP2en" class="cm-input" rows="3" dir="ltr" placeholder="Second paragraph (English)"></textarea>'+
+       '<div class="mk-thumbrow"><div class="mk-thumb" id="abThumb">الصورة</div>'+
+         '<div class="mk-thumbside"><button type="button" class="mk-link" id="abPick">اختر صورة للمربع</button><input type="file" id="abFile" accept="image/*" hidden></div></div>'+
+       '<div id="abSt" class="cm-status" role="status"></div>'+
+       '<div class="cm-actions"><button type="button" class="btn ghost" id="abCancel">إلغاء</button><button type="button" class="btn primary" id="abSave">حفظ</button></div>'+
+     '</div>';
+    document.body.appendChild(ov);
+    const close = () => ov.classList.remove('open');
+    $('abX').onclick = close; $('abCancel').onclick = close;
+    ov.addEventListener('click', e => { if(e.target === ov) close(); });
+    $('abPick').onclick = () => $('abFile').click();
+    $('abFile').onchange = async e => {
+      const f = e.target.files[0]; if(!f) return;
+      try{ abBlob = await shrink(f, 1000); $('abThumb').innerHTML = '<img src="'+URL.createObjectURL(abBlob)+'" alt="">'; }catch(err){ $('abSt').textContent = 'الصورة مش مقروءة'; $('abSt').className = 'cm-status bad'; }
+      e.target.value = '';
+    };
+    $('abSave').onclick = async () => {
+      const btn = $('abSave'), st = $('abSt'); btn.disabled = true; st.className = 'cm-status'; st.textContent = '...';
+      try{
+        const rows = [
+          { key:'about_p1_ar', value:$('abP1ar').value.trim() }, { key:'about_p2_ar', value:$('abP2ar').value.trim() },
+          { key:'about_p1_en', value:$('abP1en').value.trim() }, { key:'about_p2_en', value:$('abP2en').value.trim() }
+        ];
+        if(abBlob){ const p = 'about/'+uid()+'.jpg'; await upload(p, abBlob); rows.push({ key:'about_img', value:pubUrl(p) }); }
+        const r = await rest('site_settings?on_conflict=key', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates,return=representation' }, body:JSON.stringify(rows) });
+        if(!r.ok) throw 0;
+        rows.forEach(x => aboutData[x.key] = x.value); abBlob = null;
+        applyAbout(); close(); toast('تم الحفظ ✓');
+      }catch(err){ st.className = 'cm-status bad'; st.textContent = 'معرفتش أحفظ — اتأكد إنك شغّلت كود SQL وإنك مسجّل دخول'; }
+      btn.disabled = false;
+    };
+  }
+  $('abP1ar').value = API.dict.ar.about_p1; $('abP2ar').value = API.dict.ar.about_p2;
+  $('abP1en').value = API.dict.en.about_p1; $('abP2en').value = API.dict.en.about_p2;
+  $('abSt').textContent = ''; ov.classList.add('open');
+}
+   
 /* ---------- تشغيل ---------- */
 adminOn = !!getSession(); window.MK_ADMIN = adminOn;
 if(adminOn) mountButtons();
